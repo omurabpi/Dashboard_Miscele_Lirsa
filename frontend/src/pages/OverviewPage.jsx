@@ -1,177 +1,184 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react';
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend,
-} from 'recharts'
-import { fetchStoricoStats, fetchHealth } from '../api'
-import KpiCard from '../components/KpiCard'
+  Tooltip, ResponsiveContainer, PieChart, Pie, Cell,
+} from 'recharts';
+import { fetchOverview } from '../api';
 
-const GREEN  = '#5bb870'
-const AMBER  = '#f5c842'
-const BLUE   = '#38bdf8'
-const PURPLE = '#a855f7'
-const COLORS = [GREEN, AMBER, BLUE, PURPLE, '#f87171', '#34d399', '#fb923c', '#818cf8', '#e879f9', '#2dd4bf']
+const G     = '#4ade80';
+const AMBER = '#f59e0b';
+const BLUE  = '#60a5fa';
+const ROSE  = '#f87171';
+const PIE_COLORS = [G, AMBER, BLUE, ROSE, '#a78bfa', '#34d399', '#fb923c', '#e879f9'];
+const CARD_BG   = '#0a1c0f';
+const CARD_BORDER = '#1a3a22';
 
-const MONTHS_IT = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic']
-const fmtMese = (s) => {
-  const [y, m] = String(s).split('-')
-  return `${MONTHS_IT[(parseInt(m) || 1) - 1]} '${y?.slice(2) ?? ''}`
-}
+const MONTHS_IT = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+const fmtMese = (v) => {
+  if (!v || v.length < 6) return v;
+  const y = v.slice(2, 4); const m = parseInt(v.slice(4, 6), 10);
+  return `${MONTHS_IT[m - 1]} '${y}`;
+};
+const fmtKg = (v) => {
+  if (v == null) return 'â€”';
+  if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + ' Mt';
+  if (v >= 1_000) return (v / 1_000).toFixed(1) + ' t';
+  return v.toLocaleString('it-IT', { maximumFractionDigits: 0 }) + ' kg';
+};
+const fmtN = (v) => v == null ? 'â€”' : Number(v).toLocaleString('it-IT');
 
-const CHART_STYLE = {
-  background: '#060f08',
-  border: '1px solid #0d2e15',
-  borderRadius: 12,
-  padding: '20px 20px 12px',
-}
-
-const AXIS_STYLE = { fill: 'rgba(255,255,255,0.3)', fontSize: 10, fontFamily: 'Inter' }
-
-const CustomTooltip = ({ active, payload, label }) => {
-  if (!active || !payload?.length) return null
+function KPI({ label, value, sub, color = G, icon }) {
   return (
-    <div style={{ background: '#040d07', border: '1px solid #0d2e15', borderRadius: 8, padding: '8px 14px' }}>
-      <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>{label}</p>
+    <div className="rounded-xl p-5 flex flex-col gap-2"
+      style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}` }}>
+      <div className="flex items-center justify-between">
+        <span className="text-xs uppercase tracking-widest font-semibold"
+          style={{ color: 'rgba(255,255,255,0.4)' }}>{label}</span>
+        <span className="text-xl">{icon}</span>
+      </div>
+      <div className="text-3xl font-bold tracking-tight" style={{ color }}>{value}</div>
+      {sub && <div className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>{sub}</div>}
+    </div>
+  );
+}
+
+const CustomTooltip = ({ active, payload, label, formatter }) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="rounded-lg px-3 py-2 text-xs" style={{ background: '#0f2a17', border: `1px solid ${CARD_BORDER}` }}>
+      <div className="font-semibold mb-1" style={{ color: G }}>{label}</div>
       {payload.map((p, i) => (
-        <p key={i} style={{ color: p.color || GREEN, fontSize: 13, fontWeight: 700, fontFamily: 'monospace' }}>
-          {p.value?.toLocaleString('it-IT')}
-        </p>
+        <div key={i} style={{ color: p.color }}>
+          {p.name}: {formatter ? formatter(p.value) : p.value}
+        </div>
       ))}
     </div>
-  )
-}
+  );
+};
 
 export default function OverviewPage() {
-  const [stats, setStats]     = useState(null)
-  const [health, setHealth]   = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState(null)
+  const [data, setData]     = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]   = useState(null);
 
   useEffect(() => {
-    setLoading(true)
-    Promise.all([fetchStoricoStats({}), fetchHealth()])
-      .then(([s, h]) => { setStats(s); setHealth(h) })
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false))
-  }, [])
+    fetchOverview()
+      .then(setData)
+      .catch(e => setError(e.message))
+      .finally(() => setLoading(false));
+  }, []);
 
   if (loading) return (
-    <div className="flex items-center justify-center h-64 text-xs uppercase tracking-widest font-semibold"
-      style={{ color: 'rgba(255,255,255,0.3)' }}>
-      Caricamento statistiche…
+    <div className="flex items-center justify-center h-full" style={{ color: G }}>
+      <svg className="animate-spin w-8 h-8 mr-3" fill="none" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+      </svg>
+      Caricamentoâ€¦
     </div>
-  )
+  );
+
   if (error) return (
-    <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 12, padding: 20, color: '#f87171', fontSize: 13 }}>
-      {error}
-    </div>
-  )
+    <div className="p-8 text-red-400">Errore: {error}</div>
+  );
+
+  const { kpi, trend, macchine, tipi } = data;
 
   return (
-    <div className="space-y-6">
-
-      {/* ── Header ─────────────────────────────────────────────── */}
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-[10px] uppercase tracking-widest font-semibold mb-1" style={{ color: GREEN }}>
-            Lirsa MES · Optimus_DSG
-          </p>
-          <h1 className="text-2xl font-black tracking-tight" style={{ color: 'rgba(255,255,255,0.92)' }}>
-            Overview Dashboard
-          </h1>
-        </div>
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{
-          background: health?.db === 'connected' ? 'rgba(91,184,112,0.08)' : 'rgba(239,68,68,0.08)',
-          border: `1px solid ${health?.db === 'connected' ? '#0d2e15' : 'rgba(239,68,68,0.3)'}`,
-        }}>
-          <span className="w-2 h-2 rounded-full pulse-green"
-            style={{ background: health?.db === 'connected' ? GREEN : '#f87171' }} />
-          <span className="text-[10px] uppercase tracking-widest font-bold"
-            style={{ color: health?.db === 'connected' ? GREEN : '#f87171' }}>
-            DB {health?.db === 'connected' ? 'Online' : 'Errore'}
-          </span>
-        </div>
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-xl font-bold tracking-tight" style={{ color: '#f0fdf4' }}>Panoramica</h1>
+        <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.3)' }}>
+          Dati aggregati da tab_base_tracciabilita_lanci + tab_base_storico_miscele
+        </p>
       </div>
 
-      {/* ── KPI ───────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <KpiCard label="Applicazioni miscele totali" value={stats?.kpi?.total?.toLocaleString('it-IT')}    variant="green" icon="🔢" />
-        <KpiCard label="Articoli distinti"           value={stats?.kpi?.articoli?.toLocaleString('it-IT')} variant="amber" icon="📦" />
-        <KpiCard label="Miscele distinte"            value={stats?.kpi?.miscele?.toLocaleString('it-IT')}  variant="blue"  icon="🧪" />
+      {/* KPI grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+        <KPI label="Lanci totali"  value={fmtN(kpi.total_lanci)}    icon="ðŸš€" color={G} />
+        <KPI label="Kg prodotti"   value={fmtKg(kpi.total_kg)}       icon="âš–ï¸" color={AMBER} sub="totale storico" />
+        <KPI label="Articoli"      value={fmtN(kpi.total_articoli)}  icon="ðŸ“¦" color={BLUE} />
+        <KPI label="Miscele"       value={fmtN(kpi.total_miscele)}   icon="ðŸ§ª" color={G} />
+        <KPI label="Macchine"      value={fmtN(kpi.total_macchine)}  icon="âš™ï¸" color="rgba(255,255,255,0.7)" />
+        <KPI label="Clienti"       value={fmtN(kpi.total_clienti)}   icon="ðŸ¢" color={AMBER} />
       </div>
 
-      {/* ── Area chart mensile ────────────────────────────────── */}
-      {stats?.perMese?.length > 0 && (
-        <div style={CHART_STYLE}>
-          <p className="text-[10px] uppercase tracking-widest font-bold mb-4" style={{ color: 'rgba(255,255,255,0.35)' }}>
-            Applicazioni miscele – ultimi 12 mesi
-          </p>
+      {/* Charts row 1 */}
+      <div className="grid grid-cols-1 xl:grid-cols-5 gap-4">
+        {/* Area chart â€“ monthly trend */}
+        <div className="xl:col-span-3 rounded-xl p-5"
+          style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}` }}>
+          <div className="text-xs uppercase tracking-widest font-semibold mb-4"
+            style={{ color: 'rgba(255,255,255,0.4)' }}>Kg Prodotti per Mese (ultimi 13 mesi)</div>
           <ResponsiveContainer width="100%" height={220}>
-            <AreaChart data={stats.perMese} margin={{ top: 4, right: 10, left: 0, bottom: 0 }}>
+            <AreaChart data={trend} margin={{ left: 0, right: 8, top: 4, bottom: 0 }}>
               <defs>
-                <linearGradient id="gradGreen" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor={GREEN} stopOpacity={0.3} />
-                  <stop offset="95%" stopColor={GREEN} stopOpacity={0} />
+                <linearGradient id="gradKg" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={G} stopOpacity={0.25} />
+                  <stop offset="95%" stopColor={G} stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 6" stroke="rgba(255,255,255,0.04)" />
-              <XAxis dataKey="mese" tick={AXIS_STYLE} axisLine={false} tickLine={false} tickFormatter={fmtMese} />
-              <YAxis tick={AXIS_STYLE} axisLine={false} tickLine={false} />
-              <Tooltip content={<CustomTooltip />} />
-              <Area type="monotone" dataKey="conteggio" stroke={GREEN} strokeWidth={2}
-                fill="url(#gradGreen)" dot={{ r: 3, fill: GREEN, strokeWidth: 0 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+              <XAxis dataKey="mese" tickFormatter={fmtMese} tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10 }} />
+              <YAxis tickFormatter={v => v >= 1000 ? (v/1000).toFixed(0)+'t' : v} tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10 }} width={40} />
+              <Tooltip content={<CustomTooltip formatter={fmtKg} />}
+                labelFormatter={fmtMese} />
+              <Area type="monotone" dataKey="kg_prodotti" name="Kg prodotti"
+                stroke={G} strokeWidth={2} fill="url(#gradKg)" dot={false} activeDot={{ r: 4 }} />
             </AreaChart>
           </ResponsiveContainer>
+          <div className="mt-2 flex items-center gap-4 text-[10px]" style={{ color: 'rgba(255,255,255,0.3)' }}>
+            <span style={{ color: G }}>â€” Kg prodotti</span>
+          </div>
         </div>
-      )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-        {/* ── Top Articoli bar ─────────────────────────────────── */}
-        {stats?.topArticoli?.length > 0 && (
-          <div style={CHART_STYLE}>
-            <p className="text-[10px] uppercase tracking-widest font-bold mb-4" style={{ color: 'rgba(255,255,255,0.35)' }}>
-              Top 10 Articoli per applicazioni
-            </p>
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={stats.topArticoli} layout="vertical" margin={{ top: 0, right: 16, left: 10, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 6" stroke="rgba(255,255,255,0.04)" horizontal={false} />
-                <XAxis type="number" tick={AXIS_STYLE} axisLine={false} tickLine={false} />
-                <YAxis type="category" dataKey="cod_articolo" width={72}
-                  tick={{ ...AXIS_STYLE, fontSize: 9 }} axisLine={false} tickLine={false} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="conteggio" fill={GREEN} radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+        {/* Donut â€“ tipi componenti */}
+        <div className="xl:col-span-2 rounded-xl p-5"
+          style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}` }}>
+          <div className="text-xs uppercase tracking-widest font-semibold mb-4"
+            style={{ color: 'rgba(255,255,255,0.4)' }}>Distribuzione Tipi Componente</div>
+          <ResponsiveContainer width="100%" height={160}>
+            <PieChart>
+              <Pie data={tipi} dataKey="kg_totali" nameKey="tipo"
+                cx="50%" cy="50%" innerRadius={48} outerRadius={72}
+                paddingAngle={2} stroke="none">
+                {tipi.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+              </Pie>
+              <Tooltip formatter={(v) => fmtKg(v)} />
+            </PieChart>
+          </ResponsiveContainer>
+          <div className="mt-3 space-y-1 overflow-y-auto max-h-28">
+            {tipi.map((t, i) => (
+              <div key={t.tipo} className="flex items-center justify-between text-[10px]">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full shrink-0" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
+                  <span style={{ color: 'rgba(255,255,255,0.55)' }}>{t.tipo}</span>
+                </div>
+                <span style={{ color: PIE_COLORS[i % PIE_COLORS.length] }}>{fmtKg(t.kg_totali)}</span>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
+      </div>
 
-        {/* ── Top Miscele donut ────────────────────────────────── */}
-        {stats?.topMiscele?.length > 0 && (
-          <div style={CHART_STYLE}>
-            <p className="text-[10px] uppercase tracking-widest font-bold mb-4" style={{ color: 'rgba(255,255,255,0.35)' }}>
-              Top 10 Miscele per occorrenze
-            </p>
-            <ResponsiveContainer width="100%" height={260}>
-              <PieChart>
-                <Pie data={stats.topMiscele} dataKey="conteggio" nameKey="cod_miscela"
-                  cx="50%" cy="50%" outerRadius={95} innerRadius={45} paddingAngle={2}>
-                  {stats.topMiscele.map((_, i) => (
-                    <Cell key={i} fill={COLORS[i % COLORS.length]} stroke="transparent" />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{ background: '#040d07', border: '1px solid #0d2e15', borderRadius: 8, fontSize: 11 }}
-                  labelStyle={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, textTransform: 'uppercase' }}
-                  itemStyle={{ color: GREEN }}
-                  formatter={(v) => v.toLocaleString('it-IT')}
-                />
-                <Legend wrapperStyle={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        )}
+      {/* Bar chart â€“ top macchine */}
+      <div className="rounded-xl p-5" style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}` }}>
+        <div className="text-xs uppercase tracking-widest font-semibold mb-4"
+          style={{ color: 'rgba(255,255,255,0.4)' }}>Top 10 Macchine per Kg</div>
+        <ResponsiveContainer width="100%" height={200}>
+          <BarChart data={[...macchine].reverse()} layout="vertical"
+            margin={{ left: 8, right: 24, top: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
+            <XAxis type="number" tickFormatter={v => v >= 1000 ? (v/1000).toFixed(0)+'t' : v}
+              tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10 }} />
+            <YAxis type="category" dataKey="Macchina" width={100}
+              tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 10 }} />
+            <Tooltip content={<CustomTooltip formatter={fmtKg} />} />
+            <Bar dataKey="kg_totali" name="Kg totali" fill={AMBER} radius={[0, 4, 4, 0]} barSize={14} />
+          </BarChart>
+        </ResponsiveContainer>
       </div>
     </div>
-  )
+  );
 }
