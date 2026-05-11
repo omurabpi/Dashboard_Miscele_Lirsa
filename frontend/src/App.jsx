@@ -1,4 +1,4 @@
-﻿import { Routes, Route, NavLink } from 'react-router-dom';
+import { Routes, Route, NavLink } from 'react-router-dom';
 import { useState } from 'react';
 import OverviewPage from './pages/OverviewPage';
 import LanciPage from './pages/LanciPage';
@@ -34,21 +34,22 @@ export default function App() {
   return (
     <div className="flex min-h-screen font-sans" style={{ background: '#040d07' }}>
 
-      {/* â”€â”€ Sidebar â”€â”€ */}
+      {/* -- Sidebar -- */}
       <aside
         className="shrink-0 flex flex-col transition-all duration-300"
         style={{ width: collapsed ? 56 : 216, background: '#060f08', borderRight: `1px solid ${BORDER}` }}
       >
         {/* Logo */}
         <div className="flex items-center gap-3 px-3 py-4" style={{ borderBottom: `1px solid ${BORDER}` }}>
-          <div className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-base"
-            style={{ background: 'rgba(74,222,128,0.15)', border: `1px solid rgba(74,222,128,0.3)` }}>
-            ðŸ§ª
-          </div>
+          <img
+            src="/Dashboard/Ricette/lirsalogo.png"
+            alt="Lirsa"
+            className="shrink-0"
+            style={{ height: collapsed ? 28 : 32, width: 'auto', objectFit: 'contain', filter: 'brightness(0) invert(1)' }}
+          />
           {!collapsed && (
             <div className="overflow-hidden leading-tight">
-              <div className="text-xs font-bold tracking-widest uppercase" style={{ color: G }}>RICETTE</div>
-              <div className="text-[9px] uppercase tracking-widest mt-0.5" style={{ color: 'rgba(255,255,255,0.25)' }}>LIRSA MES</div>
+              <div className="text-[9px] uppercase tracking-widest mt-0.5" style={{ color: 'rgba(255,255,255,0.25)' }}>MES · Ricette</div>
             </div>
           )}
           <button
@@ -105,7 +106,7 @@ export default function App() {
         )}
       </aside>
 
-      {/* â”€â”€ Main â”€â”€ */}
+      {/* -- Main -- */}
       <main className="flex-1 overflow-auto min-w-0">
         <Routes>
           <Route path="/"        element={<OverviewPage />} />

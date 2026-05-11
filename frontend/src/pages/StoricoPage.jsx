@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { fetchStorico, fetchSuggerimenti } from '../api';
 import Pagination from '../components/Pagination';
 
@@ -20,14 +20,14 @@ const inp = {
 };
 
 const fmtDate = (v) => {
-  if (!v) return 'â€”';
+  if (!v) return '-';
   const s = String(v).replace(/\D/g, '');
   if (s.length === 8) return `${s.slice(6, 8)}/${s.slice(4, 6)}/${s.slice(0, 4)}`;
   return v;
 };
 
 const fmtNum = (v, dec = 3) =>
-  v == null || v === '' ? 'â€”' : Number(v).toLocaleString('it-IT', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+  v == null || v === '' ? '-' : Number(v).toLocaleString('it-IT', { minimumFractionDigits: dec, maximumFractionDigits: dec });
 
 const TYPE_COLOR = { ADDITIVO: '#f59e0b', POLIMERO: '#4ade80', COLORANTE: '#60a5fa', CARICA: '#f87171' };
 
@@ -36,7 +36,7 @@ function TipoBadge({ tipo }) {
   return (
     <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider"
       style={{ background: `${c}20`, color: c, border: `1px solid ${c}40` }}>
-      {tipo || 'â€”'}
+      {tipo || '-'}
     </span>
   );
 }
@@ -79,10 +79,10 @@ export default function StoricoPage() {
     { key: 'Articolo',             label: 'Articolo',      color: AMBER },
     { key: 'Componente',           label: 'Componente',    color: 'rgba(255,255,255,0.7)' },
     { key: 'Tipo',                 label: 'Tipo',          render: (v) => <TipoBadge tipo={v} /> },
-    { key: 'Perc_Miscela_Unica',   label: '% Mix',         fmt: (v) => v != null ? fmtNum(v, 3) + ' %' : 'â€”', align: 'right' },
+    { key: 'Perc_Miscela_Unica',   label: '% Mix',         fmt: (v) => v != null ? fmtNum(v, 3) + ' %' : '-', align: 'right' },
     { key: 'Quantita_Totale_Kg',   label: 'Kg',            fmt: (v) => fmtNum(v, 2), align: 'right' },
-    { key: 'Costo_Uni_EuroKg',     label: 'â‚¬/kg',          fmt: (v) => fmtNum(v, 4), align: 'right', color: 'rgba(255,255,255,0.5)' },
-    { key: 'Contributo_Costo_EuroKg', label: 'Contributo â‚¬/kg', fmt: (v) => fmtNum(v, 4), align: 'right', color: 'rgba(255,255,255,0.4)' },
+    { key: 'Costo_Uni_EuroKg',     label: '€/kg',          fmt: (v) => fmtNum(v, 4), align: 'right', color: 'rgba(255,255,255,0.5)' },
+    { key: 'Contributo_Costo_EuroKg', label: 'Contributo €/kg', fmt: (v) => fmtNum(v, 4), align: 'right', color: 'rgba(255,255,255,0.4)' },
     { key: 'N_Strati',             label: 'Strati',        align: 'right', color: 'rgba(255,255,255,0.4)' },
   ];
 
@@ -99,9 +99,9 @@ export default function StoricoPage() {
       {/* Filters */}
       <div className="rounded-xl p-4 grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3"
         style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}` }}>
-        <input style={inp} placeholder="Miscelaâ€¦"    value={filters.miscela}    onChange={e => setF('miscela', e.target.value)} />
-        <input style={inp} placeholder="Articoloâ€¦"   value={filters.articolo}   onChange={e => setF('articolo', e.target.value)} />
-        <input style={inp} placeholder="Componenteâ€¦" value={filters.componente} onChange={e => setF('componente', e.target.value)} />
+        <input style={inp} placeholder="Miscela..."    value={filters.miscela}    onChange={e => setF('miscela', e.target.value)} />
+        <input style={inp} placeholder="Articolo..."   value={filters.articolo}   onChange={e => setF('articolo', e.target.value)} />
+        <input style={inp} placeholder="Componente..." value={filters.componente} onChange={e => setF('componente', e.target.value)} />
         <select style={inp} value={filters.macchina} onChange={e => setF('macchina', e.target.value)}>
           <option value="">Tutte le macchine</option>
           {macchineList.map(m => <option key={m} value={m}>{m}</option>)}
@@ -117,7 +117,7 @@ export default function StoricoPage() {
       {/* Count + reset */}
       <div className="flex items-center justify-between">
         <span className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
-          {loading ? 'Caricamentoâ€¦' : <><strong style={{ color: G }}>{total.toLocaleString('it-IT')}</strong> righe trovate</>}
+          {loading ? 'Caricamento...' : <><strong style={{ color: G }}>{total.toLocaleString('it-IT')}</strong> righe trovate</>}
         </span>
         <button
           onClick={() => { setFilters({ miscela: '', articolo: '', macchina: '', componente: '', tipo: '', dateFrom: '', dateTo: '' }); setPage(1); }}
@@ -147,7 +147,7 @@ export default function StoricoPage() {
             <tbody>
               {loading && (
                 <tr><td colSpan={cols.length} className="py-8 text-center" style={{ color: G }}>
-                  Caricamentoâ€¦
+                  Caricamento...
                 </td></tr>
               )}
               {!loading && rows.length === 0 && (
@@ -165,7 +165,7 @@ export default function StoricoPage() {
                     const display = c.render
                       ? c.render(raw)
                       : <span style={{ color: c.color || 'rgba(255,255,255,0.65)' }}>
-                          {c.fmt ? c.fmt(raw) : (raw ?? 'â€”')}
+                          {c.fmt ? c.fmt(raw) : (raw ?? '-')}
                           {c.maxW && raw && raw.length > 20
                             ? null
                             : null}

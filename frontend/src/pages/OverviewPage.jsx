@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, PieChart, Pie, Cell,
@@ -20,12 +20,12 @@ const fmtMese = (v) => {
   return `${MONTHS_IT[m - 1]} '${y}`;
 };
 const fmtKg = (v) => {
-  if (v == null) return 'â€”';
+  if (v == null) return '-';
   if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + ' Mt';
   if (v >= 1_000) return (v / 1_000).toFixed(1) + ' t';
   return v.toLocaleString('it-IT', { maximumFractionDigits: 0 }) + ' kg';
 };
-const fmtN = (v) => v == null ? 'â€”' : Number(v).toLocaleString('it-IT');
+const fmtN = (v) => v == null ? '-' : Number(v).toLocaleString('it-IT');
 
 function KPI({ label, value, sub, color = G, icon }) {
   return (
@@ -74,7 +74,7 @@ export default function OverviewPage() {
         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
       </svg>
-      Caricamentoâ€¦
+      Caricamento...
     </div>
   );
 
@@ -96,12 +96,12 @@ export default function OverviewPage() {
 
       {/* KPI grid */}
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <KPI label="Lanci totali"  value={fmtN(kpi.total_lanci)}    icon="ðŸš€" color={G} />
-        <KPI label="Kg prodotti"   value={fmtKg(kpi.total_kg)}       icon="âš–ï¸" color={AMBER} sub="totale storico" />
-        <KPI label="Articoli"      value={fmtN(kpi.total_articoli)}  icon="ðŸ“¦" color={BLUE} />
-        <KPI label="Miscele"       value={fmtN(kpi.total_miscele)}   icon="ðŸ§ª" color={G} />
-        <KPI label="Macchine"      value={fmtN(kpi.total_macchine)}  icon="âš™ï¸" color="rgba(255,255,255,0.7)" />
-        <KPI label="Clienti"       value={fmtN(kpi.total_clienti)}   icon="ðŸ¢" color={AMBER} />
+        <KPI label="Lanci totali"  value={fmtN(kpi.total_lanci)}    icon="#" color={G} />
+        <KPI label="Kg prodotti"   value={fmtKg(kpi.total_kg)}       icon="kg" color={AMBER} sub="totale storico" />
+        <KPI label="Articoli"      value={fmtN(kpi.total_articoli)}  icon="[]" color={BLUE} />
+        <KPI label="Miscele"       value={fmtN(kpi.total_miscele)}   icon="~" color={G} />
+        <KPI label="Macchine"      value={fmtN(kpi.total_macchine)}  icon="*" color="rgba(255,255,255,0.7)" />
+        <KPI label="Clienti"       value={fmtN(kpi.total_clienti)}   icon="@" color={AMBER} />
       </div>
 
       {/* Charts row 1 */}
@@ -129,7 +129,7 @@ export default function OverviewPage() {
             </AreaChart>
           </ResponsiveContainer>
           <div className="mt-2 flex items-center gap-4 text-[10px]" style={{ color: 'rgba(255,255,255,0.3)' }}>
-            <span style={{ color: G }}>â€” Kg prodotti</span>
+            <span style={{ color: G }}>- Kg prodotti</span>
           </div>
         </div>
 
